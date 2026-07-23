@@ -153,7 +153,7 @@ pkgUpdate() {
   info "  Updating packages... "
   DEBIAN_FRONTEND=noninteractive apt-get update -y > /dev/null 2>&1
   DEBIAN_FRONTEND=noninteractive apt-get upgrade -y > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt-get -y install nftables cron lsof zip unzip lz4 pv fail2ban imagemagick libmemcached-dev zlib1g-dev ipset libpcre3  libpcre3-dev  libpcre2-8-0 libltdl-dev libltdl7 wget rsync tar sqlite3 openssl curl libmhash2 lbzip2 net-tools libonig5 > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt-get -y install nftables cron lsof zip unzip lz4 pv fail2ban imagemagick libmemcached-dev zlib1g-dev ipset libpcre2-8-0 libpcre2-dev libltdl-dev libltdl7 wget rsync tar sqlite3 openssl curl libmhash2 lbzip2 net-tools libonig5 > /dev/null 2>&1
   systemctl enable cron > /dev/null 2>&1
   systemctl start cron > /dev/null 2>&1
   curl -s https://rclone.org/install.sh | sudo bash >/dev/null 2>&1
@@ -458,25 +458,22 @@ installPHP() {
   fi
 
 
-  DEBIAN_FRONTEND=noninteractive apt-get install -y libxml2 libssl-dev libsqlite3-dev zlib1g libgmp10 libldap2 libsasl2-2 libedit-dev libpng-dev libbz2-dev libxslt1-dev libcurl4 libenchant-2-2  libonig5 libzip4 > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt-get install -y libssl-dev libsqlite3-dev zlib1g libgmp10 libldap2 libsasl2-2 libedit-dev libpng-dev libbz2-dev libxslt1-dev libcurl4 libenchant-2-2  libonig5 libzip5 libargon2-1 > /dev/null 2>&1
   mkdir -p /tmp/cpg
   cd /tmp/cpg
 
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm74_7.4.33-1_x86_64.deb > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm74_7.4.33-1_x86_64.deb > /dev/null 2>&1
   wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
   dpkg --force-all -i ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm82_8.2.31-1_x86_64.deb > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm82_8.2.31-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm83_8.3.31-1_x86_64.deb > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm83_8.3.31-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm84_8.4.22-1_x86_64.deb  > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm84_8.4.22-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm85_8.5.7-1_x86_64.deb  > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm85_8.5.7-1_x86_64.deb > /dev/null 2>&1
+  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm82_8.2.32-1_x86_64.deb > /dev/null 2>&1
+  dpkg --force-all -i ops-php-fpm82_8.2.32-1_x86_64.deb > /dev/null 2>&1
+  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm83_8.3.32-1_x86_64.deb > /dev/null 2>&1
+  dpkg --force-all -i ops-php-fpm83_8.3.32-1_x86_64.deb > /dev/null 2>&1
+  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm84_8.4.23-1_x86_64.deb  > /dev/null 2>&1
+  dpkg --force-all -i ops-php-fpm84_8.4.23-1_x86_64.deb > /dev/null 2>&1
+  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm85_8.5.8-1_x86_64.deb  > /dev/null 2>&1
+  dpkg --force-all -i ops-php-fpm85_8.5.8-1_x86_64.deb > /dev/null 2>&1
 
 
-  cp /opt/cpguard/packages/php74/etc/php74-fpm.service /etc/systemd/system/php74-fpm.service > /dev/null 2>&1
   cp /opt/cpguard/packages/php81/etc/php81-fpm.service /etc/systemd/system/php81-fpm.service > /dev/null 2>&1
   cp /opt/cpguard/packages/php82/etc/php82-fpm.service /etc/systemd/system/php82-fpm.service > /dev/null 2>&1
   cp /opt/cpguard/packages/php83/etc/php83-fpm.service /etc/systemd/system/php83-fpm.service > /dev/null 2>&1
@@ -491,8 +488,6 @@ installPHP() {
   systemctl enable  php85-fpm > /dev/null 2>&1
 
 
-  ln -sf /opt/cpguard/packages/php74/openssl/lib/libssl.so.1.1 /lib/x86_64-linux-gnu/libssl.so.1.1
-  ln -sf /opt/cpguard/packages/php74/openssl/lib/libcrypto.so.1.1 /lib/x86_64-linux-gnu/libcrypto.so.1.1
   ln -s /opt/cpguard/packages/php85/bin/php /usr/bin/ > /dev/null 2>&1
 
   systemctl daemon-reload
@@ -620,7 +615,15 @@ EOF
   sed -i 's/^ServerTokens .*/ServerTokens Prod/' /etc/apache2/conf-enabled/security.conf
   sed -i '/^LogFormat/!b;:a;n;/^LogFormat/ba;iErrorLogFormat "%{%Y\/%m\/%d %H:%M:%S}t [%m:%l] [pid %P] [client %a] %M"' /etc/apache2/apache2.conf
 
+  mkdir -p /etc/systemd/system/apache2.service.d
+
+cat <<EOF | sudo tee /etc/systemd/system/apache2.service.d/override.conf
+[Service]
+ProtectHome=no
+EOF
+
   # Restart apache services
+  systemctl daemon-reload > /dev/null 2>&1
   systemctl restart apache2 > /dev/null 2>&1
 
   # Check if apache is active
@@ -954,4 +957,3 @@ installfiles
 csfwhitelitips
 verifyLicense
 displayMsg
-
