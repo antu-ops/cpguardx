@@ -38,7 +38,7 @@ ARCH=
 [[ -z "$DB_ENGINE" ]] && export DB_ENGINE="MYSQL_8.4"
 OK="\e[32mOK\e[0m \n"
 
-SECONDS=0  # Reset SECONDS to 0 at the start
+SECONDS=0 
 Server_IP=$(hostname -I | awk '{print $1}')
 RED=`tput setaf 1`
 GREEN=`tput setaf 2`
@@ -55,13 +55,13 @@ sleep 1
 
 info()
 {
-  /bin/echo -ne "\n\e[44;97m i \e[0m $* " >&2 #print info with i symbol
+  /bin/echo -ne "\n\e[44;97m i \e[0m $* " >&2 
 }
 
 
 die()
 {
-  /bin/echo -e "\n\e[91mX  $* \e[0m\n" >&2 #print errors with x symbol
+  /bin/echo -e "\n\e[91mX  $* \e[0m\n" >&2 
   echo -e "\r${YELLOW} Please check the server requirements...${RESET}"
   echo -e "\nExiting..."
   exit 1
@@ -153,7 +153,7 @@ pkgUpdate() {
   info "  Updating packages... "
   DEBIAN_FRONTEND=noninteractive apt-get update -y > /dev/null 2>&1
   DEBIAN_FRONTEND=noninteractive apt-get upgrade -y > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt-get -y install nftables cron lsof zip unzip lz4 pv fail2ban imagemagick libmemcached-dev zlib1g-dev ipset libpcre3  libpcre3-dev  libpcre2-8-0 libltdl-dev libltdl7 wget rsync tar sqlite3 openssl curl libmhash2 lbzip2 net-tools libonig5 > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt-get -y install nftables cron lsof zip unzip lz4 pv fail2ban imagemagick libmemcached-dev zlib1g-dev ipset libpcre2-8-0 libpcre2-dev libltdl-dev libltdl7 wget rsync tar sqlite3 openssl curl libmhash2 lbzip2 net-tools libonig5 > /dev/null 2>&1
   systemctl enable cron > /dev/null 2>&1
   systemctl start cron > /dev/null 2>&1
   curl -s https://rclone.org/install.sh | sudo bash >/dev/null 2>&1
@@ -286,7 +286,7 @@ EOF
             sed -i '/^\[mysqld\]/a mysqlx = 0' /etc/mysql/mysql.conf.d/mysqld.cnf
             systemctl restart mysql > /dev/null 2>&1
 
-            # Set root password and switch to mysql_native_password if needed
+            
             mysql --silent --skip-column-names <<EOF > /dev/null 2>&1
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 ALTER USER 'root'@'localhost' IDENTIFIED WITH auth_socket;
@@ -307,7 +307,7 @@ EOF
             ln -s /var/run/mysqld/mysqld.sock /opt/cpguard/mysql.sock
             systemctl restart mysql > /dev/null 2>&1
 
-            # Set root password and switch to mysql_native_password if needed
+            
             mysql --silent --skip-column-names <<EOF > /dev/null 2>&1
 ALTER USER 'root'@'localhost' IDENTIFIED WITH unix_socket;
 FLUSH PRIVILEGES;
@@ -328,7 +328,7 @@ EOF
             mkdir -p /opt/cpguard
             ln -s /var/run/mysqld/mysqld.sock /opt/cpguard/mysql.sock
             systemctl restart mysql > /dev/null 2>&1
-            # Set root password and switch to mysql_native_password if needed
+            
             mysql --silent --skip-column-names <<EOF > /dev/null 2>&1
 ALTER USER 'root'@'localhost' IDENTIFIED WITH unix_socket;
 FLUSH PRIVILEGES;
@@ -386,21 +386,21 @@ secureInstall() {
 
 
 
-  # Remove anonymous users
+  
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "DELETE FROM mysql.user WHERE User='';"  > /dev/null 2>&1
 
-  # Disallow root login remotely
+  
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"  > /dev/null 2>&1
 
-  # Remove test database
+  
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "DROP DATABASE IF EXISTS test;"  > /dev/null 2>&1
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"  > /dev/null 2>&1
 
-  # Reload privilege tables
+  
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "FLUSH PRIVILEGES;"  > /dev/null 2>&1
 
 
-  # Create ~/.my.cnf with root credentials
+  
 
 cat > ~/.my.cnf <<EOF
 [client]
@@ -443,38 +443,59 @@ installPHP() {
 
   LINK="/usr/bin/php"
 
-  # Check if the symlink or file already exists
+  
   if [ -e "$LINK" ] || [ -L "$LINK" ]; then
     rm -f "$LINK"
   fi
 
-  # Check if user exists
+  
   if ! id "cpguard" &>/dev/null; then
 
-    # Create user with no login shell and /opt/cpguard home
+    
     useradd cpguard -s /bin/false -M -d /opt/cpguard -r > /dev/null 2>&1
 #    chown -R cpguard:cpguard /opt/cpguard/app > /dev/null 2>&1
 
   fi
 
 
-  DEBIAN_FRONTEND=noninteractive apt-get install -y libxml2 libssl-dev libsqlite3-dev zlib1g libgmp10 libldap2 libsasl2-2 libedit-dev libpng-dev libbz2-dev libxslt1-dev libcurl4 libenchant-2-2  libonig5 libzip4 > /dev/null 2>&1
   mkdir -p /tmp/cpg
   cd /tmp/cpg
+  case "$OS_VERSION" in
+    24.04)
 
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm74_7.4.33-1_x86_64.deb > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm74_7.4.33-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm82_8.2.31-1_x86_64.deb > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm82_8.2.31-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm83_8.3.31-1_x86_64.deb > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm83_8.3.31-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm84_8.4.22-1_x86_64.deb  > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm84_8.4.22-1_x86_64.deb > /dev/null 2>&1
-  wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm85_8.5.7-1_x86_64.deb  > /dev/null 2>&1
-  dpkg --force-all -i ops-php-fpm85_8.5.7-1_x86_64.deb > /dev/null 2>&1
+        DEBIAN_FRONTEND=noninteractive apt-get install -y libxml2 libssl-dev libsqlite3-dev zlib1g libgmp10 libldap2 libsasl2-2 libedit-dev libpng-dev libbz2-dev libxslt1-dev libcurl4 libenchant-2-2  libonig5 libzip4 > /dev/null 2>&1
 
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm74_7.4.33-1_x86_64.deb > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm74_7.4.33-1_x86_64.deb > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm82_8.2.33-1_x86_64.deb > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm82_8.2.33-1_x86_64.deb > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm83_8.3.33-1_x86_64.deb > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm83_8.3.33-1_x86_64.deb > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm84_8.4.24-1_x86_64.deb  > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm84_8.4.24-1_x86_64.deb > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs24/ops-php-fpm85_8.5.9-1_x86_64.deb  > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm85_8.5.9-1_x86_64.deb > /dev/null 2>&1
+        ;;
+
+    26.04)
+
+        DEBIAN_FRONTEND=noninteractive apt-get install -y libssl-dev libsqlite3-dev zlib1g libgmp10 libldap2 libsasl2-2 libedit-dev libpng-dev libbz2-dev libxslt1-dev libcurl4 libenchant-2-2  libonig5 libzip5 libargon2-1 > /dev/null 2>&1
+
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs26/ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs26/ops-php-fpm82_8.2.33-1_x86_64.deb > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm82_8.2.33-1_x86_64.deb  > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs26/ops-php-fpm83_8.3.33-1_x86_64.deb > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm83_8.3.33-1_x86_64.deb > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs26/ops-php-fpm84_8.4.24-1_x86_64.deb  > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm84_8.4.24-1_x86_64.deb > /dev/null 2>&1
+        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs26/ops-php-fpm85_8.5.9-1_x86_64.deb  > /dev/null 2>&1
+        dpkg --force-all -i ops-php-fpm85_8.5.9-1_x86_64.deb > /dev/null 2>&1
+        ;;
+
+  esac
 
   cp /opt/cpguard/packages/php74/etc/php74-fpm.service /etc/systemd/system/php74-fpm.service > /dev/null 2>&1
   cp /opt/cpguard/packages/php81/etc/php81-fpm.service /etc/systemd/system/php81-fpm.service > /dev/null 2>&1
@@ -490,9 +511,8 @@ installPHP() {
   systemctl enable  php84-fpm > /dev/null 2>&1
   systemctl enable  php85-fpm > /dev/null 2>&1
 
-
-  ln -sf /opt/cpguard/packages/php74/openssl/lib/libssl.so.1.1 /lib/x86_64-linux-gnu/libssl.so.1.1
-  ln -sf /opt/cpguard/packages/php74/openssl/lib/libcrypto.so.1.1 /lib/x86_64-linux-gnu/libcrypto.so.1.1
+  ln -sf /opt/cpguard/packages/php74/openssl/lib/libssl.so.1.1 /lib/x86_64-linux-gnu/libssl.so.1.1  > /dev/null 2>&1
+  ln -sf /opt/cpguard/packages/php74/openssl/lib/libcrypto.so.1.1 /lib/x86_64-linux-gnu/libcrypto.so.1.1  > /dev/null 2>&1
   ln -s /opt/cpguard/packages/php85/bin/php /usr/bin/ > /dev/null 2>&1
 
   systemctl daemon-reload
@@ -532,7 +552,7 @@ chmod 700 /var/cache/nginx
 
   systemctl restart nginx  > /dev/null 2>&1
 
-  # Check if nginx is active
+  
   nginx_status=$(systemctl is-active nginx)
 
   if [[ "$nginx_status" == "active" ]]; then
@@ -544,10 +564,10 @@ chmod 700 /var/cache/nginx
 
   info "  Installing Apache..."
 
-  # Install Apache2 and required modules
+  
   DEBIAN_FRONTEND=noninteractive apt install -y apache2 libapache2-mod-security2 > /dev/null 2>&1
 
-  # Change Apache listen port to 8080
+  
   :> /etc/apache2/ports.conf
 
   cat >>/etc/apache2/ports.conf <<EOF
@@ -564,7 +584,7 @@ EOF
 
 
 
-  # Enable ModSecurity
+  
   cat >/etc/modsecurity/modsecurity.conf <<EOF
   <IfModule mod_security2.c>
     SecRuleEngine On
@@ -610,7 +630,7 @@ EOF
   </IfModule>
 EOF
 
-  # Enable required Apache modules
+  
   echo "RemoteIPHeader X-Client-Ip" > /etc/apache2/mods-available/remoteip.conf 2>/dev/null
   a2enmod rewrite remoteip proxy proxy_fcgi setenvif proxy_http headers ssl > /dev/null 2>&1
   a2dismod status > /dev/null 2>&1
@@ -620,10 +640,22 @@ EOF
   sed -i 's/^ServerTokens .*/ServerTokens Prod/' /etc/apache2/conf-enabled/security.conf
   sed -i '/^LogFormat/!b;:a;n;/^LogFormat/ba;iErrorLogFormat "%{%Y\/%m\/%d %H:%M:%S}t [%m:%l] [pid %P] [client %a] %M"' /etc/apache2/apache2.conf
 
-  # Restart apache services
+if [ "$OS_NAME" = "ubuntu" ] && [ "$OS_VERSION" = "26.04" ]; then
+
+mkdir -p /etc/systemd/system/apache2.service.d
+
+cat <<EOF | sudo tee /etc/systemd/system/apache2.service.d/override.conf
+[Service]
+ProtectHome=no
+EOF
+
+fi
+
+  
+  systemctl daemon-reload > /dev/null 2>&1
   systemctl restart apache2 > /dev/null 2>&1
 
-  # Check if apache is active
+  
   apache_status=$(systemctl is-active apache2)
 
   if [[ "$apache_status" == "active" ]]; then
@@ -657,18 +689,18 @@ installPostfix() {
 
   export DEBIAN_FRONTEND=noninteractive
 
-  # Preseed Postfix for "Local only" configuration
+  
   echo "postfix postfix/main_mailer_type select Local only" | debconf-set-selections
   echo "postfix postfix/mailname string $(hostname -f)" | debconf-set-selections
 
-  # Install postfix
+  
   apt-get install -y postfix > /dev/null 2>&1
 
-  # Ensure Postfix only listens on localhost
+  
   postconf -e "inet_interfaces = loopback-only"
   postconf -e "mydestination = \$myhostname, localhost.\$mydomain, localhost"
 
-  # Enable and start the service silently
+  
   systemctl enable postfix > /dev/null 2>&1
   systemctl restart postfix > /dev/null 2>&1
 
@@ -954,4 +986,3 @@ installfiles
 csfwhitelitips
 verifyLicense
 displayMsg
-
