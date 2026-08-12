@@ -38,7 +38,7 @@ ARCH=
 [[ -z "$DB_ENGINE" ]] && export DB_ENGINE="MYSQL_8.4"
 OK="\e[32mOK\e[0m \n"
 
-SECONDS=0 
+SECONDS=0
 Server_IP=$(hostname -I | awk '{print $1}')
 RED=`tput setaf 1`
 GREEN=`tput setaf 2`
@@ -55,13 +55,13 @@ sleep 1
 
 info()
 {
-  /bin/echo -ne "\n\e[44;97m i \e[0m $* " >&2 
+  /bin/echo -ne "\n\e[44;97m i \e[0m $* " >&2
 }
 
 
 die()
 {
-  /bin/echo -e "\n\e[91mX  $* \e[0m\n" >&2 
+  /bin/echo -e "\n\e[91mX  $* \e[0m\n" >&2
   echo -e "\r${YELLOW} Please check the server requirements...${RESET}"
   echo -e "\nExiting..."
   exit 1
@@ -286,7 +286,7 @@ EOF
             sed -i '/^\[mysqld\]/a mysqlx = 0' /etc/mysql/mysql.conf.d/mysqld.cnf
             systemctl restart mysql > /dev/null 2>&1
 
-            
+
             mysql --silent --skip-column-names <<EOF > /dev/null 2>&1
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 ALTER USER 'root'@'localhost' IDENTIFIED WITH auth_socket;
@@ -307,7 +307,7 @@ EOF
             ln -s /var/run/mysqld/mysqld.sock /opt/cpguard/mysql.sock
             systemctl restart mysql > /dev/null 2>&1
 
-            
+
             mysql --silent --skip-column-names <<EOF > /dev/null 2>&1
 ALTER USER 'root'@'localhost' IDENTIFIED WITH unix_socket;
 FLUSH PRIVILEGES;
@@ -328,7 +328,7 @@ EOF
             mkdir -p /opt/cpguard
             ln -s /var/run/mysqld/mysqld.sock /opt/cpguard/mysql.sock
             systemctl restart mysql > /dev/null 2>&1
-            
+
             mysql --silent --skip-column-names <<EOF > /dev/null 2>&1
 ALTER USER 'root'@'localhost' IDENTIFIED WITH unix_socket;
 FLUSH PRIVILEGES;
@@ -386,21 +386,21 @@ secureInstall() {
 
 
 
-  
+
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "DELETE FROM mysql.user WHERE User='';"  > /dev/null 2>&1
 
-  
+
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"  > /dev/null 2>&1
 
-  
+
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "DROP DATABASE IF EXISTS test;"  > /dev/null 2>&1
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"  > /dev/null 2>&1
 
-  
+
   mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "FLUSH PRIVILEGES;"  > /dev/null 2>&1
 
 
-  
+
 
 cat > ~/.my.cnf <<EOF
 [client]
@@ -443,15 +443,15 @@ installPHP() {
 
   LINK="/usr/bin/php"
 
-  
+
   if [ -e "$LINK" ] || [ -L "$LINK" ]; then
     rm -f "$LINK"
   fi
 
-  
+
   if ! id "cpguard" &>/dev/null; then
 
-    
+
     useradd cpguard -s /bin/false -M -d /opt/cpguard -r > /dev/null 2>&1
 #    chown -R cpguard:cpguard /opt/cpguard/app > /dev/null 2>&1
 
@@ -552,7 +552,7 @@ chmod 700 /var/cache/nginx
 
   systemctl restart nginx  > /dev/null 2>&1
 
-  
+
   nginx_status=$(systemctl is-active nginx)
 
   if [[ "$nginx_status" == "active" ]]; then
@@ -564,10 +564,10 @@ chmod 700 /var/cache/nginx
 
   info "  Installing Apache..."
 
-  
+
   DEBIAN_FRONTEND=noninteractive apt install -y apache2 libapache2-mod-security2 > /dev/null 2>&1
 
-  
+
   :> /etc/apache2/ports.conf
 
   cat >>/etc/apache2/ports.conf <<EOF
@@ -584,7 +584,7 @@ EOF
 
 
 
-  
+
   cat >/etc/modsecurity/modsecurity.conf <<EOF
   <IfModule mod_security2.c>
     SecRuleEngine On
@@ -630,7 +630,7 @@ EOF
   </IfModule>
 EOF
 
-  
+
   echo "RemoteIPHeader X-Client-Ip" > /etc/apache2/mods-available/remoteip.conf 2>/dev/null
   a2enmod rewrite remoteip proxy proxy_fcgi setenvif proxy_http headers ssl > /dev/null 2>&1
   a2dismod status > /dev/null 2>&1
@@ -644,18 +644,18 @@ if [ "$OS_NAME" = "ubuntu" ] && [ "$OS_VERSION" = "26.04" ]; then
 
 mkdir -p /etc/systemd/system/apache2.service.d
 
-cat <<EOF | sudo tee /etc/systemd/system/apache2.service.d/override.conf
+cat <<EOF | sudo tee /etc/systemd/system/apache2.service.d/override.conf > /dev/null
 [Service]
 ProtectHome=no
 EOF
 
 fi
 
-  
+
   systemctl daemon-reload > /dev/null 2>&1
   systemctl restart apache2 > /dev/null 2>&1
 
-  
+
   apache_status=$(systemctl is-active apache2)
 
   if [[ "$apache_status" == "active" ]]; then
@@ -689,18 +689,18 @@ installPostfix() {
 
   export DEBIAN_FRONTEND=noninteractive
 
-  
+
   echo "postfix postfix/main_mailer_type select Local only" | debconf-set-selections
   echo "postfix postfix/mailname string $(hostname -f)" | debconf-set-selections
 
-  
+
   apt-get install -y postfix > /dev/null 2>&1
 
-  
+
   postconf -e "inet_interfaces = loopback-only"
   postconf -e "mydestination = \$myhostname, localhost.\$mydomain, localhost"
 
-  
+
   systemctl enable postfix > /dev/null 2>&1
   systemctl restart postfix > /dev/null 2>&1
 
