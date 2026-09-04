@@ -584,7 +584,7 @@ EOF
     SecDefaultAction "phase:2,deny,log,status:406"
     SecRequestBodyLimitAction ProcessPartial
     SecResponseBodyLimitAction ProcessPartial
-    SecRequestBodyLimit 13107200
+    SecRequestBodyLimit 268435456
     SecRequestBodyNoFilesLimit 131072
     SecPcreMatchLimit 250000
     SecPcreMatchLimitRecursion 250000
