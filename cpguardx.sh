@@ -103,7 +103,6 @@ checkRequirements()
   checkOperatingSystem
   checkPortConflicts
   checkDatabaseEngine
-  checkIfHostnameResolves
   checkRootPartitionSize
 
 }
@@ -224,13 +223,6 @@ checkDatabaseEngine() {
   esac
 }
 
-checkIfHostnameResolves()
-{
-  local LOCAL_IP=$(getent hosts "$HOSTNAME" | awk '{print $1}')
-  if [ -z "${LOCAL_IP}" ]; then
-    die "Hostname $HOSTNAME does not resolve. Set a hosts entry in: /etc/hosts"
-  fi
-}
 
 checkRootPartitionSize()
 {
