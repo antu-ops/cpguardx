@@ -528,6 +528,12 @@ installWebServer() {
   sed -i 's/^\s*server_tokens on;/        server_tokens off;/' /etc/nginx/nginx.conf
   sed -i 's/^\s*#\s*server_tokens off;/        server_tokens off;/' /etc/nginx/nginx.conf
 
+  # Set maximum client request body size
+  if ! grep -qE '^\s*client_max_body_size\s+2048M;' /etc/nginx/nginx.conf; then
+      sed -i '/^[[:space:]]*http[[:space:]]*{/a\
+        client_max_body_size 2048M;' /etc/nginx/nginx.conf
+  fi
+
   sed -i '/# Gzip Settings/a \
         gzip_vary on;\
         gzip_proxied any;\
