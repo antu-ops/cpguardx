@@ -549,6 +549,7 @@ installWebServer() {
 
   DEBIAN_FRONTEND=noninteractive apt install -y apache2 libapache2-mod-security2 > /dev/null 2>&1
 
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/apache2.conf /etc/apache2/apache2.conf
   cp -rf /opt/cpguard/app/setup/panel/files/apache2/ports.conf /etc/apache2/ports.conf 
   cp -rf /opt/cpguard/app/setup/panel/files/apache2/modsecurity.conf /etc/modsecurity/modsecurity.conf 
   cp -rf /opt/cpguard/app/setup/panel/files/apache2/security2.conf /etc/apache2/mods-enabled/security2.conf 
