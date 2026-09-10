@@ -525,27 +525,12 @@ installWebServer() {
   DEBIAN_FRONTEND=noninteractive apt update > /dev/null 2>&1
   DEBIAN_FRONTEND=noninteractive apt install -y nginx > /dev/null 2>&1
 
-  sed -i 's/^\s*server_tokens on;/        server_tokens off;/' /etc/nginx/nginx.conf
-  sed -i 's/^\s*#\s*server_tokens off;/        server_tokens off;/' /etc/nginx/nginx.conf
+  cp -rf /opt/cpguard/app/setup/panel/files/nginx/nginx.conf /etc/nginx/nginx.conf
 
-  # Set maximum client request body size
-  if ! grep -qE '^\s*client_max_body_size\s+2048M;' /etc/nginx/nginx.conf; then
-      sed -i '/^[[:space:]]*http[[:space:]]*{/a\
-        client_max_body_size 2048M;' /etc/nginx/nginx.conf
-  fi
 
-  sed -i '/# Gzip Settings/a \
-        gzip_vary on;\
-        gzip_proxied any;\
-        gzip_comp_level 6;\
-        gzip_buffers 16 8k;\
-        gzip_http_version 1.1;\
-        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;\
-        ' /etc/nginx/nginx.conf
-
-mkdir -p /var/cache/nginx
-chown -R www-data:www-data /var/cache/nginx
-chmod 700 /var/cache/nginx
+  mkdir -p /var/cache/nginx
+  chown -R www-data:www-data /var/cache/nginx
+  chmod 700 /var/cache/nginx
 
 
   systemctl restart nginx  > /dev/null 2>&1
@@ -562,81 +547,19 @@ chmod 700 /var/cache/nginx
 
   info "  Installing Apache..."
 
-
   DEBIAN_FRONTEND=noninteractive apt install -y apache2 libapache2-mod-security2 > /dev/null 2>&1
 
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/ports.conf /etc/apache2/ports.conf 
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/modsecurity.conf /etc/modsecurity/modsecurity.conf 
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/security2.conf /etc/apache2/mods-enabled/security2.conf 
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/remoteip.conf /etc/apache2/mods-available/remoteip.conf
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/security.conf /etc/apache2/conf-enabled/security.conf
 
-  :> /etc/apache2/ports.conf
-
-  cat >>/etc/apache2/ports.conf <<EOF
-  Listen 8080
-
-  <IfModule ssl_module>
-        Listen 8443
-  </IfModule>
-
-  <IfModule mod_gnutls.c>
-        Listen 8443
- </IfModule>
-EOF
-
-
-
-
-  cat >/etc/modsecurity/modsecurity.conf <<EOF
-  <IfModule mod_security2.c>
-    SecRuleEngine On
-    SecRequestBodyAccess On
-    SecDefaultAction "phase:2,deny,log,status:406"
-    SecRequestBodyLimitAction ProcessPartial
-    SecResponseBodyLimitAction ProcessPartial
-    SecRequestBodyLimit 268435456
-    SecRequestBodyNoFilesLimit 131072
-    SecPcreMatchLimit 250000
-    SecPcreMatchLimitRecursion 250000
-    SecCollectionTimeout 600
-    SecDebugLog /var/log/apache2/modsec_debug.log
-    SecDebugLogLevel 0
-    SecAuditEngine RelevantOnly
-    SecAuditLogRelevantStatus "^(?:5|4(?!04))"
-    SecAuditLogParts ABIJDEFHZ
-    SecAuditLogType Serial
-    SecAuditLog /var/log/apache2/modsec_audit.log
-    SecUploadDir /tmp
-    SecTmpDir /tmp
-    SecDataDir /tmp
-    SecTmpSaveUploadedFiles on
-    # Include file for cPGuard WAF
-    IncludeOptional /etc/cpguard/cpguard_modsec100.conf
-</IfModule>
-EOF
-
-
-  cat >/etc/apache2/mods-enabled/security2.conf <<EOF
-  <IfModule security2_module>
-        # Default Debian dir for modsecurity's persistent data
-        SecDataDir /var/cache/modsecurity
-
-        # Include all the *.conf files in /etc/modsecurity.
-        # Keeping your local configuration in that directory
-        # will allow for an easy upgrade of THIS file and
-        # make your life easier
-        IncludeOptional /etc/modsecurity/*.conf
-
-        # Include OWASP ModSecurity CRS rules if installed
-        #IncludeOptional /usr/share/modsecurity-crs/*.load
-  </IfModule>
-EOF
-
-
-  echo "RemoteIPHeader X-Client-Ip" > /etc/apache2/mods-available/remoteip.conf 2>/dev/null
   a2enmod rewrite remoteip proxy proxy_fcgi setenvif proxy_http headers ssl > /dev/null 2>&1
   a2dismod status > /dev/null 2>&1
   rm /etc/apache2/sites-available/*
   rm /etc/apache2/sites-enabled/*
 
-  sed -i 's/^ServerTokens .*/ServerTokens Prod/' /etc/apache2/conf-enabled/security.conf
-  sed -i '/^LogFormat/!b;:a;n;/^LogFormat/ba;iErrorLogFormat "%{%Y\/%m\/%d %H:%M:%S}t [%m:%l] [pid %P] [client %a] %M"' /etc/apache2/apache2.conf
 
 if [ "$OS_NAME" = "ubuntu" ] && [ "$OS_VERSION" = "26.04" ]; then
 
