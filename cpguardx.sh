@@ -517,119 +517,6 @@ echo -e $OK
 }
 
 
-installWebServer() {
-
-
-  info "  Installing Nginx..."
-
-  DEBIAN_FRONTEND=noninteractive apt update > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt install -y nginx > /dev/null 2>&1
-
-  cp -rf /opt/cpguard/app/setup/panel/files/nginx/nginx.conf /etc/nginx/nginx.conf
-
-
-  mkdir -p /var/cache/nginx
-  chown -R www-data:www-data /var/cache/nginx
-  chmod 700 /var/cache/nginx
-
-
-  systemctl restart nginx  > /dev/null 2>&1
-
-
-  nginx_status=$(systemctl is-active nginx)
-
-  if [[ "$nginx_status" == "active" ]]; then
-      echo -e $OK
-  else
-  check_status_and_exit $? "Failed to start Nginx"
-  fi
-
-
-  info "  Installing Apache..."
-
-  DEBIAN_FRONTEND=noninteractive apt install -y apache2 libapache2-mod-security2 > /dev/null 2>&1
-
-  cp -rf /opt/cpguard/app/setup/panel/files/apache2/apache2.conf /etc/apache2/apache2.conf
-  cp -rf /opt/cpguard/app/setup/panel/files/apache2/ports.conf /etc/apache2/ports.conf 
-  cp -rf /opt/cpguard/app/setup/panel/files/apache2/modsecurity.conf /etc/modsecurity/modsecurity.conf 
-  cp -rf /opt/cpguard/app/setup/panel/files/apache2/security2.conf /etc/apache2/mods-enabled/security2.conf 
-  cp -rf /opt/cpguard/app/setup/panel/files/apache2/remoteip.conf /etc/apache2/mods-available/remoteip.conf
-  cp -rf /opt/cpguard/app/setup/panel/files/apache2/security.conf /etc/apache2/conf-enabled/security.conf
-
-  a2enmod rewrite remoteip proxy proxy_fcgi setenvif proxy_http headers ssl > /dev/null 2>&1
-  a2dismod status > /dev/null 2>&1
-  rm /etc/apache2/sites-available/*
-  rm /etc/apache2/sites-enabled/*
-
-
-if [ "$OS_NAME" = "ubuntu" ] && [ "$OS_VERSION" = "26.04" ]; then
-
-mkdir -p /etc/systemd/system/apache2.service.d
-
-cat <<EOF | sudo tee /etc/systemd/system/apache2.service.d/override.conf > /dev/null
-[Service]
-ProtectHome=no
-EOF
-
-fi
-
-
-  systemctl daemon-reload > /dev/null 2>&1
-  systemctl restart apache2 > /dev/null 2>&1
-
-
-  apache_status=$(systemctl is-active apache2)
-
-  if [[ "$apache_status" == "active" ]]; then
-      echo -e $OK
-  else
-    check_status_and_exit $? "Failed to start Apache"
-  fi
-
-  info "  Installing OpenLiteSpeed..."
-  wget -qO- https://repo.litespeed.sh 2>/dev/null | bash >/dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt install openlitespeed ols-modsecurity -y  > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt install lsphp81 lsphp81-curl lsphp81-mysql lsphp81-intl lsphp81-imagick lsphp81-ldap lsphp81-memcached lsphp81-redis lsphp81-ioncube -y  > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt install lsphp82 lsphp82-curl lsphp82-mysql lsphp82-intl lsphp82-imagick lsphp82-ldap lsphp82-memcached lsphp82-redis lsphp82-ioncube -y  > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt install lsphp83 lsphp83-curl lsphp83-mysql lsphp83-intl lsphp83-imagick lsphp83-ldap lsphp83-memcached lsphp83-redis lsphp83-ioncube -y  > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt install lsphp84 lsphp84-curl lsphp84-mysql lsphp84-intl lsphp84-imagick lsphp84-ldap lsphp84-memcached lsphp84-redis lsphp84-ioncube -y  > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt install lsphp85 lsphp85-curl lsphp85-mysql lsphp85-intl lsphp85-imagick lsphp85-ldap lsphp85-memcached lsphp85-redis -y  > /dev/null 2>&1
-
-  sleep 3
-  systemctl stop openlitespeed.service >/dev/null 2>&1
-  systemctl stop lshttpd.service >/dev/null 2>&1
-  systemctl disable openlitespeed.service >/dev/null 2>&1
-  systemctl disable lshttpd.service >/dev/null 2>&1
-  echo -e $OK
-
-
-}
-
-
-installPostfix() {
-  info "  Installing Postfix..."
-
-  export DEBIAN_FRONTEND=noninteractive
-
-
-  echo "postfix postfix/main_mailer_type select Local only" | debconf-set-selections
-  echo "postfix postfix/mailname string $(hostname -f)" | debconf-set-selections
-
-
-  apt-get install -y postfix > /dev/null 2>&1
-
-
-  postconf -e "inet_interfaces = loopback-only"
-  postconf -e "mydestination = \$myhostname, localhost.\$mydomain, localhost"
-
-
-  systemctl enable postfix > /dev/null 2>&1
-  systemctl restart postfix > /dev/null 2>&1
-
-  echo -e $OK
-
-}
-
 
 setos() {
 info "  Installing dependency packages..."
@@ -821,9 +708,9 @@ chown -R cpguard:cpguard /opt/cpguard/app
 chown cpguard:cpguard /etc/cpguard/conf/main.conf
 chmod 750 /opt/cpguard/app/data
 
-ln -s /opt/cpguard/app/resources/templates/nginx-cpguard.conf /etc/nginx/conf.d/cpguard.conf
 
-
+chmod 750 /opt/cpguard/app/setup/install_node.sh
+/opt/cpguard/app/setup/install_node.sh > /dev/null 2>&1
 
 
 if [ -f /usr/sbin/getenforce ]; then
@@ -837,6 +724,124 @@ fi
 echo -e $OK
 
 }
+
+
+installWebServer() {
+
+
+  info "  Installing Nginx..."
+
+  DEBIAN_FRONTEND=noninteractive apt update > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt install -y nginx > /dev/null 2>&1
+
+  cp -rf /opt/cpguard/app/setup/panel/files/nginx/nginx.conf /etc/nginx/nginx.conf
+  ln -s /opt/cpguard/app/resources/templates/nginx-cpguard.conf /etc/nginx/conf.d/cpguard.conf
+
+  mkdir -p /var/cache/nginx
+  chown -R www-data:www-data /var/cache/nginx
+  chmod 700 /var/cache/nginx
+
+
+  systemctl restart nginx  > /dev/null 2>&1
+
+
+  nginx_status=$(systemctl is-active nginx)
+
+  if [[ "$nginx_status" == "active" ]]; then
+      echo -e $OK
+  else
+  check_status_and_exit $? "Failed to start Nginx"
+  fi
+
+
+  info "  Installing Apache..."
+
+  DEBIAN_FRONTEND=noninteractive apt install -y apache2 libapache2-mod-security2 > /dev/null 2>&1
+
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/apache2.conf /etc/apache2/apache2.conf
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/ports.conf /etc/apache2/ports.conf 
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/modsecurity.conf /etc/modsecurity/modsecurity.conf 
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/security2.conf /etc/apache2/mods-enabled/security2.conf 
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/remoteip.conf /etc/apache2/mods-available/remoteip.conf
+  cp -rf /opt/cpguard/app/setup/panel/files/apache2/security.conf /etc/apache2/conf-enabled/security.conf
+
+  a2enmod rewrite remoteip proxy proxy_fcgi setenvif proxy_http headers ssl > /dev/null 2>&1
+  a2dismod status > /dev/null 2>&1
+  rm /etc/apache2/sites-available/*
+  rm /etc/apache2/sites-enabled/*
+
+
+if [ "$OS_NAME" = "ubuntu" ] && [ "$OS_VERSION" = "26.04" ]; then
+
+mkdir -p /etc/systemd/system/apache2.service.d
+
+cat <<EOF | sudo tee /etc/systemd/system/apache2.service.d/override.conf > /dev/null
+[Service]
+ProtectHome=no
+EOF
+
+fi
+
+
+  systemctl daemon-reload > /dev/null 2>&1
+  systemctl restart apache2 > /dev/null 2>&1
+
+
+  apache_status=$(systemctl is-active apache2)
+
+  if [[ "$apache_status" == "active" ]]; then
+      echo -e $OK
+  else
+    check_status_and_exit $? "Failed to start Apache"
+  fi
+
+  info "  Installing OpenLiteSpeed..."
+  wget -qO- https://repo.litespeed.sh 2>/dev/null | bash >/dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt install openlitespeed ols-modsecurity -y  > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt install lsphp81 lsphp81-curl lsphp81-mysql lsphp81-intl lsphp81-imagick lsphp81-ldap lsphp81-memcached lsphp81-redis lsphp81-ioncube -y  > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt install lsphp82 lsphp82-curl lsphp82-mysql lsphp82-intl lsphp82-imagick lsphp82-ldap lsphp82-memcached lsphp82-redis lsphp82-ioncube -y  > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt install lsphp83 lsphp83-curl lsphp83-mysql lsphp83-intl lsphp83-imagick lsphp83-ldap lsphp83-memcached lsphp83-redis lsphp83-ioncube -y  > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt install lsphp84 lsphp84-curl lsphp84-mysql lsphp84-intl lsphp84-imagick lsphp84-ldap lsphp84-memcached lsphp84-redis lsphp84-ioncube -y  > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt install lsphp85 lsphp85-curl lsphp85-mysql lsphp85-intl lsphp85-imagick lsphp85-ldap lsphp85-memcached lsphp85-redis -y  > /dev/null 2>&1
+
+  sleep 3
+  systemctl stop openlitespeed.service >/dev/null 2>&1
+  systemctl stop lshttpd.service >/dev/null 2>&1
+  systemctl disable openlitespeed.service >/dev/null 2>&1
+  systemctl disable lshttpd.service >/dev/null 2>&1
+  echo -e $OK
+
+
+}
+
+
+installPostfix() {
+  info "  Installing Postfix..."
+
+  export DEBIAN_FRONTEND=noninteractive
+
+
+  echo "postfix postfix/main_mailer_type select Local only" | debconf-set-selections
+  echo "postfix postfix/mailname string $(hostname -f)" | debconf-set-selections
+
+
+  apt-get install -y postfix > /dev/null 2>&1
+
+
+  postconf -e "inet_interfaces = loopback-only"
+  postconf -e "mydestination = \$myhostname, localhost.\$mydomain, localhost"
+
+
+  systemctl enable postfix > /dev/null 2>&1
+  systemctl restart postfix > /dev/null 2>&1
+
+  echo -e $OK
+
+}
+
+
+
+
 
 
 csfwhitelitips () {
@@ -900,11 +905,11 @@ checkRequirements
 installMySQL
 secureInstall
 installPHP
-installWebServer
-installPostfix
 setos
 setconf
 installfiles
+installWebServer
+installPostfix
 csfwhitelitips
 verifyLicense
 displayMsg
