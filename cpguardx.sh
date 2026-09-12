@@ -611,9 +611,9 @@ else
         URL="get-cpg.nyc3.digitaloceanspaces.com"
 fi
 
-wget https://$URL/latest/panel/app.tar.gz > /dev/null 2>&1
-wget https://$URL/latest/etc_cpguard.tar.gz > /dev/null 2>&1
-wget https://$URL/latest/3rdparty.tar.gz > /dev/null 2>&1
+wget https://$URL/latest/pre/panel/app.tar.gz > /dev/null 2>&1
+wget https://$URL/latest/pre/etc_cpguard.tar.gz > /dev/null 2>&1
+wget https://$URL/latest/pre/3rdparty.tar.gz > /dev/null 2>&1
 
 
 tar -xvzf app.tar.gz > /dev/null 2>&1
