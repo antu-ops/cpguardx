@@ -475,8 +475,6 @@ installPHP() {
 
         DEBIAN_FRONTEND=noninteractive apt-get install -y libssl-dev libsqlite3-dev zlib1g libgmp10 libldap2 libsasl2-2 libedit-dev libpng-dev libbz2-dev libxslt1-dev libcurl4 libenchant-2-2  libonig5 libzip5 libargon2-1 > /dev/null 2>&1
 
-        wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs26/ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
-        dpkg --force-all -i ops-php-fpm81_8.1.34-1_x86_64.deb > /dev/null 2>&1
         wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs26/ops-php-fpm82_8.2.33-1_x86_64.deb > /dev/null 2>&1
         dpkg --force-all -i ops-php-fpm82_8.2.33-1_x86_64.deb  > /dev/null 2>&1
         wget https://get-cpg.nyc3.cdn.digitaloceanspaces.com/debs26/ops-php-fpm83_8.3.33-1_x86_64.deb > /dev/null 2>&1
@@ -798,13 +796,22 @@ fi
   info "  Installing OpenLiteSpeed..."
   wget -qO- https://repo.litespeed.sh 2>/dev/null | bash >/dev/null 2>&1
   DEBIAN_FRONTEND=noninteractive apt install openlitespeed ols-modsecurity -y  > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt install lsphp81 lsphp81-curl lsphp81-mysql lsphp81-intl lsphp81-imagick lsphp81-ldap lsphp81-memcached lsphp81-redis lsphp81-ioncube -y  > /dev/null 2>&1
+
+  if [ "$OS_VERSION" = "24.04" ]; then
+
+    DEBIAN_FRONTEND=noninteractive apt install lsphp81 lsphp81-curl lsphp81-mysql lsphp81-intl lsphp81-imagick lsphp81-ldap lsphp81-memcached lsphp81-redis lsphp81-ioncube -y  > /dev/null 2>&1
+  
+  fi
+
   DEBIAN_FRONTEND=noninteractive apt install lsphp82 lsphp82-curl lsphp82-mysql lsphp82-intl lsphp82-imagick lsphp82-ldap lsphp82-memcached lsphp82-redis lsphp82-ioncube -y  > /dev/null 2>&1
   DEBIAN_FRONTEND=noninteractive apt install lsphp83 lsphp83-curl lsphp83-mysql lsphp83-intl lsphp83-imagick lsphp83-ldap lsphp83-memcached lsphp83-redis lsphp83-ioncube -y  > /dev/null 2>&1
   DEBIAN_FRONTEND=noninteractive apt install lsphp84 lsphp84-curl lsphp84-mysql lsphp84-intl lsphp84-imagick lsphp84-ldap lsphp84-memcached lsphp84-redis lsphp84-ioncube -y  > /dev/null 2>&1
   DEBIAN_FRONTEND=noninteractive apt install lsphp85 lsphp85-curl lsphp85-mysql lsphp85-intl lsphp85-imagick lsphp85-ldap lsphp85-memcached lsphp85-redis -y  > /dev/null 2>&1
 
   sleep 3
+
+  cp -rf /opt/cpguard/app/setup/panel/files/ols/httpd_config.conf /usr/local/lsws/conf
+  cp -rf /opt/cpguard/app/setup/panel/files/ols/modsecurity.conf /usr/local/lsws/conf/
   systemctl stop openlitespeed.service >/dev/null 2>&1
   systemctl stop lshttpd.service >/dev/null 2>&1
   systemctl disable openlitespeed.service >/dev/null 2>&1
