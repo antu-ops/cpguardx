@@ -152,7 +152,7 @@ pkgUpdate() {
   info "  Updating packages... "
   DEBIAN_FRONTEND=noninteractive apt-get update -y > /dev/null 2>&1
   DEBIAN_FRONTEND=noninteractive apt-get upgrade -y > /dev/null 2>&1
-  DEBIAN_FRONTEND=noninteractive apt-get -y install nftables cron lsof zip unzip lz4 pv fail2ban imagemagick libmemcached-dev zlib1g-dev ipset libpcre2-8-0 libpcre2-dev libltdl-dev libltdl7 wget rsync tar sqlite3 openssl curl libmhash2 lbzip2 net-tools libonig5 > /dev/null 2>&1
+  DEBIAN_FRONTEND=noninteractive apt-get -y install nftables ttyd cron lsof zip unzip lz4 pv fail2ban imagemagick libmemcached-dev zlib1g-dev ipset libpcre2-8-0 libpcre2-dev libltdl-dev libltdl7 wget rsync tar sqlite3 openssl curl libmhash2 lbzip2 net-tools libonig5 > /dev/null 2>&1
   systemctl enable cron > /dev/null 2>&1
   systemctl start cron > /dev/null 2>&1
   curl -s https://rclone.org/install.sh | sudo bash >/dev/null 2>&1
